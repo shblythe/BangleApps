@@ -1,0 +1,16 @@
+{ "id": "widstepsrest",
+  "name": "Steps REST Widget",
+  "shortName":"Steps REST",
+  "version":"0.01",
+  "description": "Regularly writes steps details to a REST API, e.g. for steps challenge",
+  "icon": "icon.png",
+  "type": "widget",
+  "tags": "widget",
+  "supports" : ["BANGLEJS2"],
+  "readme": "README.md",
+  "custom": "custom.html",
+  "customConnect": true,
+  "storage": [
+    {"name":"widstepsrest.wid.js","url":"widget.js"}
+  ]
+}
