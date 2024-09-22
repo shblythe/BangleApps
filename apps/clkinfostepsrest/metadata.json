@@ -1,0 +1,16 @@
+{ "id": "clkinfostepsrest",
+  "name": "Clock info fields for REST steps challenge",
+  "shortName":"REST steps clkinfo",
+  "version":"0.01",
+  "description": "Clock info fields to display steps according to health app, and steps challenge standing from REST API",
+  "icon": "icon.png",
+  "type": "clkinfo",
+  "tags": "clkinfo",
+  "supports" : ["BANGLEJS2"],
+  "readme": "README.md",
+  "custom": "custom.html",
+  "customConnect": true,
+  "storage": [
+    {"name":"stepsrest.clkinfo.js","url":"clkinfo.js"}
+  ]
+}
