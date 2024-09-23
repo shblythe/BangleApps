@@ -1,4 +1,4 @@
-{ "id": "clrclok",
+{ "id": "clearclock",
   "name": "Clear Clock",
   "shortName":"Clear Clock",
   "version":"0.01",
@@ -10,7 +10,7 @@
   "supports" : ["BANGLEJS2"],
   "readme": "README.md",
   "storage": [
-    {"name":"clrclok.app.js","url":"app.js"},
-    {"name":"clrclok.img","url":"app-icon.js","evaluate":true}
+    {"name":"clearclock.app.js","url":"app.js"},
+    {"name":"clearclock.img","url":"app-icon.js","evaluate":true}
   ]
 }
