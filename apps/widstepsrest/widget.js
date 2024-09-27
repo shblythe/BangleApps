@@ -14,7 +14,9 @@ variables so they don't interfere with currently-running apps */
             let steps = 0;
             require("health").readDay(date, (h) => steps+=h.steps);
             const config = require("Storage").readJSON("steprst.json")||{};
-            const post_url = config.url+date.toISOString().substr(0,10)+"/"+steps;
+            const date_string = date.getFullYear()+"-"+(date.getMonth()+1).toString().padStart(2,'0')+
+                                "-"+date.getDate().toString().padStart(2,'0')
+            const post_url = config.url+date_string+"/"+steps;
             console.log(post_url);
             Bangle.http(post_url,{method:'post'}).then(data=>{
                 console.log("Got ",data);
