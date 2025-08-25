@@ -230,7 +230,7 @@ and which gives information about the app for the Launcher.
   "src":"-myappid", // source file
   "type":"widget/clock/app/bootloader/...", // optional, default "app"
      // see 'type' in 'metadata.json format' below for more options/info
-  "version":"1.23",
+  "version":"0.01",
      // added by BangleApps loader on upload based on metadata.json
   "files:"file1,file2,file3",
      // added by BangleApps loader on upload - lists all files
@@ -249,7 +249,7 @@ and which gives information about the app for the Launcher.
 { "id": "appid",              // 7 character app id
   "name": "Readable name",    // readable name
   "shortName": "Short name",  // short name for launcher
-  "version": "0v01",          // the version of this app
+  "version": "0.01",          // the version of this app
   "description": "...",       // long description (can contain markdown)
   "icon": "icon.png",         // icon in apps/
   "screenshots" : [ { "url":"screenshot.png" } ], // optional screenshot for app
@@ -270,7 +270,8 @@ and which gives information about the app for the Launcher.
                               //   'notify' - provides 'notify' library for showing notifications
                               //   'locale' - provides 'locale' library for language-specific date/distance/etc
                               //              (a version of 'locale' is included in the firmware)
-  "tags": "",                 // comma separated tag list for searching
+                              //   'defaultconfig' - a set of apps that will can be installed and will wipe out all previously installed apps
+  "tags": "",                 // comma separated tag list for searching (don't include uppercase or spaces)
                               // common types are:
                               //   'clock' - it's a clock
                               //   'widget' - it is (or provides) a widget
@@ -289,6 +290,7 @@ and which gives information about the app for the Launcher.
   "dependencies" : { "message":"widget" } // optional, depend on a specific type of widget - see provides_widgets
   "provides_modules" : ["messageicons"] // optional, this app provides a module that can be used with 'require'
   "provides_widgets" : ["battery"] // optional, this app provides a type of widget - 'alarm/battery/bluetooth/pedometer/message'
+  "provides_features" : ["welcome"] // optional, this app provides some feature, used to ensure two aren't installed at once. Currently just 'welcome'
   "default" : true,           // set if an app is the default implementer of something (a widget/module/etc)
   "readme": "README.md",      // if supplied, a link to a markdown-style text file
                               // that contains more information about this app (usage, etc)

@@ -14,6 +14,8 @@ if (stepGoal == undefined) {
 exports.loadCount = 0;
 /// A list of all the instances returned by addInteractive
 exports.clockInfos = [];
+/// A list of loaded clockInfos
+exports.clockInfoMenus = undefined;
 
 /// Load the settings, with defaults
 exports.loadSettings = function() {
@@ -29,28 +31,32 @@ exports.loadSettings = function() {
 
 /// Load a list of ClockInfos - this does not cache and reloads each time
 exports.load = function() {
+  if (exports.clockInfoMenus)
+    return exports.clockInfoMenus;
   var settings = exports.loadSettings();
   delete settings.apps; // keep just the basic settings in memory
   // info used for drawing...
   var hrm = 0;
   var alt = "--";
   // callbacks (needed for easy removal of listeners)
-  function batteryUpdateHandler() { bangleItems[0].emit("redraw"); }
-  function stepUpdateHandler() { bangleItems[1].emit("redraw"); }
+  function batteryUpdateHandler() { bangleItems.find(i=>i.name=="Battery").emit("redraw"); }
+  function stepUpdateHandler() { bangleItems.find(i=>i.name=="Steps").emit("redraw"); }
   function hrmUpdateHandler(e) {
     if (e && e.confidence>60) hrm = Math.round(e.bpm);
-    bangleItems[2].emit("redraw");
+    bangleItems.find(i=>i.name=="HRM").emit("redraw");
   }
   function altUpdateHandler() {
     try {
       Bangle.getPressure().then(data=>{
         if (!data) return;
-        alt = Math.round(data.altitude) + "m";
-        bangleItems[3].emit("redraw");
+
+        alt =require("locale").distance(data.altitude);
+        bangleItems.find(i=>i.name=="Altitude").emit("redraw");
       });
     } catch (e) {
       print("Caught "+e+"\n in function altUpdateHandler in module clock_info");
-      bangleItems[3].emit('redraw');}
+      bangleItems.find(i=>i.name=="Altitude").emit('redraw');
+    }
   }
   // actual menu
   var menu = [{
@@ -114,6 +120,30 @@ exports.load = function() {
         }
         hrm = 0;
       },
+    },
+    { name: "BLE",
+      isOn: () => {
+        const s = NRF.getSecurityStatus();
+        return s.advertising || s.connected;
+      },
+      get: function() {
+        return {
+          text: this.isOn() ? "On" : "Off",
+          img: atob("GBiBAAAAAAAAAAAYAAAcAAAWAAATAAARgAMRgAGTAADGAAB8AAA4AAA4AAB8AADGAAGTAAMRgAARgAATAAAWAAAcAAAYAAAAAAAAAA==")
+          // small gaps added to BLE icon to ensure middle of B isn't filled
+        };
+      },
+      run: function() {
+        if (this.isOn()) {
+          NRF.sleep();
+        } else {
+          NRF.wake();
+          Bluetooth.setConsole(1);
+        }
+        setTimeout(() => this.emit("redraw"), 250);
+      },
+      show: function(){},
+      hide: function(){},
     }
   ],
   }];
@@ -127,14 +157,19 @@ exports.load = function() {
         min : 0, max : settings.maxAltitude,
         img : atob("GBiBAAAAAAAAAAAAAAAAAAAAAAACAAAGAAAPAAEZgAOwwAPwQAZgYAwAMBgAGBAACDAADGAABv///////wAAAAAAAAAAAAAAAAAAAA==")
       }),
+      run : function() { alt = "--"; this.emit("redraw"); altUpdateHandler(); },
       show : function() { this.interval = setInterval(altUpdateHandler, 60000); alt = "--"; altUpdateHandler(); },
       hide : function() { clearInterval(this.interval); delete this.interval; },
     });
   }
-
+  var clkInfoCache = require('Storage').read('.clkinfocache');
+  if (clkInfoCache!==undefined) {
+    // note: code below is included in clkinfocache by bootupdate.js
+    // we use clkinfocache if it exists as it's faster
+    eval(clkInfoCache);
+  } else require("Storage").list(/clkinfo\.js$/).forEach(fn => {
   // In case there exists already a menu object b with the same name as the next
   // object a, we append the items. Otherwise we add the new object a to the list.
-  require("Storage").list(/clkinfo.js$/).forEach(fn => {
     try{
       var a = eval(require("Storage").read(fn))();
       var b = menu.find(x => x.name === a.name);
@@ -146,6 +181,7 @@ exports.load = function() {
   });
 
   // return it all!
+  exports.clockInfoMenus = menu;
   return menu;
 };
 
@@ -274,7 +310,7 @@ exports.addInteractive = function(menu, options) {
         //in the worst case we come back to 0
       } while(menu[options.menuA].items.length==0);
       // When we change, ensure we don't display the same thing as another clockinfo if we can avoid it
-      while ((options.menuB < menu[options.menuA].items.length) &&
+      while ((options.menuB < menu[options.menuA].items.length-1) &&
              exports.clockInfos.some(m => (m!=options) && m.menuA==options.menuA && m.menuB==options.menuB))
           options.menuB++;
     }
@@ -345,6 +381,9 @@ exports.addInteractive = function(menu, options) {
     menuHideItem(menu[options.menuA].items[options.menuB]);
     exports.loadCount--;
     delete exports.clockInfos[options.index];
+    // If nothing loaded now, clear our list of loaded menus
+    if (exports.loadCount==0)
+      exports.clockInfoMenus = undefined;
   };
   options.redraw = function() {
     drawItem(menu[options.menuA].items[options.menuB]);

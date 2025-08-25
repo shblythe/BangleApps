@@ -17,7 +17,8 @@ let vectorval = 20;
 let font = g.getFonts().includes("12x20") ? "12x20" : "6x8:2";
 let settings = Object.assign({
   showClocks: true,
-  fullscreen: false
+  fullscreen: false,
+  buzz:false
 }, s.readJSON("taglaunch.json", true) || {});
 if ("vectorsize" in settings)
   vectorval = parseInt(settings.vectorsize);
@@ -48,15 +49,20 @@ if (launchCache.hash!=launchHash) {
     .filter(app=>app && app.type=="app" || app.type=="clock" || !app.type)
     .sort((a,b)=>sort(a,b))
     .forEach(app => {
-      let appTags = app.tags.split(",")
-        .map(tag => tag.trim())
-        .map(tag => tag === "tools" ? "tool" : tag) // tool = tools
-        .filter(tag => Object.keys(tags).includes(tag));
-      if (appTags.length === 0) {
+      let appTags = [];
+      if (!app.tags) {
         appTags.push("misc");
-      } else if (appTags.length > 1 && appTags.indexOf("tool") >= 0) {
-        // everything has tag 'tool', unregister when at least one other known tag
-        appTags.splice(appTags.indexOf("tool"), 1);
+      } else {
+        appTags = app.tags.split(",")
+          .map(tag => tag.trim())
+          .map(tag => tag === "tools" ? "tool" : tag) // tool = tools
+          .filter(tag => Object.keys(tags).includes(tag));
+        if (appTags.length === 0) {
+          appTags.push("misc");
+        } else if (appTags.length > 1 && appTags.indexOf("tool") >= 0) {
+          // everything has tag 'tool', unregister when at least one other known tag
+          appTags.splice(appTags.indexOf("tool"), 1);
+        }
       }
       appTags.forEach(tag => appsByTag[tag].push(app));
     });
@@ -103,15 +109,25 @@ let showTagMenu = (tag) => {
       }
     },
     select : i => {
-      let app = appsByTag[tag][i];
-      if (!app) return;
-      if (!app.src || require("Storage").read(app.src)===undefined) {
-        Bangle.setUI();
-        E.showMessage(/*LANG*/"App Source\nNot found");
-        setTimeout(showMainMenu, 2000);
-      } else {
-        load(app.src);
+      const loadApp = () => {
+        let app = appsByTag[tag][i];
+        if (!app) return;
+        if (!app.src || require("Storage").read(app.src)===undefined) {
+          Bangle.setUI();
+          E.showMessage(/*LANG*/"App Source\nNot found");
+          setTimeout(showMainMenu, 2000);
+        } else {
+          load(app.src);
+        }
+      };    
+      if(settings.buzz){
+        Bangle.buzz(25);
+        //let the buzz have effect
+        setTimeout(loadApp,27);
+      }else{
+        loadApp();
       }
+      
     },
     back : showMainMenu,
     remove: unload
@@ -133,6 +149,7 @@ let showMainMenu = () => {
       }
     },
     select : i => {
+      if(settings.buzz)Bangle.buzz(25);
       let tag = tagKeys[i];
       showTagMenu(tag);
     },
