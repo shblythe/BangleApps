@@ -23,7 +23,7 @@
         Bangle.http(config.url,{method:'get'}).then(data=>{
             const resp = JSON.parse(data.resp);
             let output = "";
-            for (player of resp.players) {
+            for (let player of resp.players) {
                 output +=
                     player.name.substr(0,1)+" " +
                     player.steps+"\n";
@@ -78,4 +78,5 @@
             }
         ]
     };
-}) // must not have a semi-colon!
+// next line must not have a semi-colon at the end!
+})
