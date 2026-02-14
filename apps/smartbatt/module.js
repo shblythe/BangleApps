@@ -1,6 +1,5 @@
 {
   var dataFile = "smartbattdata.json";
-  var interval;
   var storage = require("Storage");
 
 
@@ -9,7 +8,8 @@
   function getSettings() {
     return Object.assign({
       //Record Interval stored in ms
-      doLogging: false
+      doLogging: false,
+      updateInterval:18000000 //default to 5 hours
     }, require('Storage').readJSON("smartbatt.settings.json", true) || {});
   }
 
@@ -65,8 +65,16 @@
       let newAvg = weightedAverage(data.avgBattDrainage, data.totalHours, currentDrainage, deltaHours * weightCoefficient);
       data.avgBattDrainage = newAvg;
       data.timeLastRecorded = now;
-      data.totalCycles += 1;
-      data.totalHours += deltaHours;
+      if(data.totalCycles<60){
+        data.totalCycles += 1;
+        data.totalHours += deltaHours;
+
+      }else{
+        data.totalCycles=60;
+        data.totalHours=100;
+      }
+      
+
       data.battLastRecorded = batt;
       storage.writeJSON(dataFile, data);
 
@@ -84,6 +92,7 @@
         reason: reason
       });
     }
+    setTimeout(recordBattery,getSettings().updateInterval);
   }
 
   function weightedAverage(oldValue, oldWeight, newValue, newWeight) {
@@ -105,7 +114,7 @@
 
 
   // Estimate hours remaining
-  function estimateBatteryLife() {
+  function getExportData() {
     let data = getData();
     var batt = E.getBattery();
     var hrsLeft = Math.abs(batt / data.avgBattDrainage);
@@ -114,7 +123,9 @@
       hrsLeft: hrsLeft,
       avgDrainage:data.avgBattDrainage,
       totalHours:data.totalHours,
-      cycles:data.totalCycles
+      cycles:data.totalCycles,
+      timeLastRecorded: data.timeLastRecorded,
+      battLastRecorded: data.battLastRecorded,
     };
   }
 
@@ -123,14 +134,9 @@
     storage.erase(logFile);
   }
   // Expose public API
-  exports.record = recordBattery;
   exports.deleteData = deleteData;
-  exports.get = estimateBatteryLife;
-  exports.changeInterval = function (newInterval) {
-    clearInterval(interval);
-    interval = setInterval(recordBattery, newInterval);
-  };
-  // Start recording every 5 minutes
-  interval = setInterval(recordBattery, 600000);
+  exports.get = getExportData;
+  
+  // Start recording every 8 hours for accurate long tracking
   recordBattery(); // Log immediately
 }

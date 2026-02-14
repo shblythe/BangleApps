@@ -16,6 +16,12 @@ The module provides two clockInfos:
 ## Settings
 ### Clear Data - Clears all learned data. 
 Use this when you switch to a new clock or change the battery drainage in a fundamental way. The app averages drainage over time, and so you might just want to restart the learned data to be more accurate for the new configurations you have implemented.
+### Update Interval - The time that the module should record battery drainage
+This changes the interval when you record battery drainage. Generally, a longer interval means more precise estimates, at the cost of quick updates.
+
+Min: 30 minutes
+
+Max: 48 hours
 ### Logging - Enables logging for stats that this module uses. 
 To view the log file, go to the [Web IDE](https://www.espruino.com/ide/#), click on the storage icon (4 discs), and scroll to the file named `smartbattlog.json`. From there, you can view the file, copy to editor, or save it to your computer.
 Logs:
@@ -34,15 +40,17 @@ From any app, you can call `require("smartbatt")` and then one of the functions 
 * `require("smartbatt").get()` - Returns an object that contains:
 
   
-  * `hrsRemaining` - Hours remaining
+  * `hrsLeft` - Hours remaining
   * `avgDrainage` - Learned battery drainage per hour
-  * `totalCycles` - Total times the battery has been recorded and averaged
+  * `cycles` - Total times the battery has been recorded and averaged
+  * `timeLastRecorded` - The time when the module last updated the average, in unix seconds. (1757421612)
+  * `battLastRecorded` - The battery percent when the module last updated the average.
   * `totalHours` - Total hours recorded
   * `batt` - Current battery level
 
-    
 * `require("smartbatt").deleteData()` - Deletes all learned data. (Automatically re-learns)
 ## Creator
 - RKBoss6
 ## Contributors
-- RelapsingCertainly
+- sonicityV
+
