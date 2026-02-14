@@ -96,7 +96,7 @@ const draw_clk_info = (itm, info, options) => {
     g.setFontAlign(0,-1);
     // Wrap and truncate anything that's still too long
     if (text.length > options.w/6) {
-        text_lines = g.wrapString(text, options.w);
+        let text_lines = g.wrapString(text, options.w);
         for (let i=0; i<text_lines.length; i++) {
             let line=text_lines[i];
             g.setFontAlign(-1,-1);
