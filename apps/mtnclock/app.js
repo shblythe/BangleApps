@@ -1,5 +1,12 @@
 var data = require("Storage").readJSON("mtnclock.json", 1) || {};
 
+let weather;
+try {
+  weather = require('weather');
+} catch (_err) {
+  weather = undefined;
+}
+
 //seeded RNG to generate stars, snow, etc
 function sfc32(a, b, c, d) {
     return function() {
@@ -202,8 +209,6 @@ g.clear();
   }
 }
 
-var i = 0;
-
 function setWeather() {
   var a = {};
   //clear day/night is default weather
@@ -270,7 +275,7 @@ function setWeather() {
       //night-drizzle
       if ((data.code >= 300 && data.code < 600) || (data.code >= 200 && data.code <= 202) || (data.code >= 230 && data.code <= 232)) a.rain1 = 0xC618;
       //night-rain
-      if ((data.code >= 500 && data.code < 600) || (data.code >= 200 && data.code <= 202)) rain2 = 1;
+      if ((data.code >= 500 && data.code < 600) || (data.code >= 200 && data.code <= 202)) a.rain2 = 1;
     }
   }
   else if ((data.code >= 700) && (data.code < 800)) {
@@ -331,23 +336,35 @@ function readWeather() {
   var weatherJson = require("Storage").readJSON('weather.json', 1);
   // save updated weather data if available and it has been an hour since last updated
   if (weatherJson && weatherJson.weather && weatherJson.weather.time && (data.time === undefined || (data.time + 3600000) < weatherJson.weather.time)) {
-    data = {
-      time: weatherJson.weather.time,
-      temp: weatherJson.weather.temp,
-      code: weatherJson.weather.code
-    };
+    data.time = weatherJson.weather.time;
+    data.temp = weatherJson.weather.temp;
+    data.code = weatherJson.weather.code;
     require("Storage").writeJSON('mtnclock.json', data);
   }
 }
 
+function updateWeather() {
+  const current = weather.get();
+  if (current) {
+    data.temp = current.temp;
+    data.code = current.code;
+    data.time = Date.now();
+    require("Storage").writeJSON('mtnclock.json', data);
+    setWeather();
+  }
+}
+
+if (weather) {
+  weather.on("update", updateWeather);
+}
+
 const _GB = global.GB;
 global.GB = (event) => {
-  if (event.t==="weather") {
-    data = {
-      temp: event.temp,
-      code: event.code,
-      time: Date.now()
-    };
+  if (!weather && event.t==="weather" && event.v !== 2) {
+    // Fallback in case weather app is not installed
+    data.temp = event.temp;
+    data.code = event.code;
+    data.time = Date.now();
     require("Storage").writeJSON('mtnclock.json', data);
     setWeather();
   }
