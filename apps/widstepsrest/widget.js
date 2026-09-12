@@ -16,7 +16,7 @@ variables so they don't interfere with currently-running apps */
                                 "-"+date.getDate().toString().padStart(2,'0')
             const post_url = config.url+date_string+"/"+steps;
             console.log(post_url);
-            Bangle.http(post_url,{method:'post'}).then(data=>{
+            Bangle.http(post_url,{method:'post',body:' '}).then(data=>{
                 console.log("Got ",data);
             }).catch(e=>{
                 console.log("Err ",e);
